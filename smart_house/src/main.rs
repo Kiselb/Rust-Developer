@@ -15,10 +15,10 @@ impl _ElectricSocket {
             status: false,
         }
     }
-    pub fn _on(&self) {
+    pub fn _on(&mut self) {
         todo!()
     }
-    pub fn _off(&self) {
+    pub fn _off(&mut self) {
         todo!()
     }
     pub fn _name(&self) -> String {
