@@ -1,50 +1,41 @@
-struct _ElectricSocket {
-    name: String,
-    power_consumption: u32,
-    status: bool,
-}
-struct _Thermometer {
-    name: String,
-    temperature: i8,
-}
-impl _ElectricSocket {
-    pub fn _new(name: String) -> Self {
-        Self {
-            name,
-            power_consumption: 0,
-            status: false,
-        }
-    }
-    pub fn _on(&mut self) {
-        todo!()
-    }
-    pub fn _off(&mut self) {
-        todo!()
-    }
-    pub fn _name(&self) -> String {
-        todo!()
-    }
-    pub fn _power(&self) -> u32 {
-        todo!()
-    }
-    pub fn _status(&self) -> bool {
-        todo!()
-    }
-}
-impl _Thermometer {
-    pub fn _new(name: String) -> Self {
-        Self {
-            name,
-            temperature: 0,
-        }
-    }
-    pub fn _name(&self) -> String {
-        todo!()
-    }
-    pub fn _value(&self) -> i8 {
-        todo!()
-    }
-}
+use smart_house_lib::{ElectricSocket, SmartHouse, SmartRoom, Thermometer};
+
 fn main() {
-    todo!()
+    let mut house = SmartHouse::new(String::from("Smart House"));
+
+    let mut room1 = SmartRoom::new(String::from("Room1"));
+
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #1")));
+    room1.add(es);
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #2")));
+    room1.add(es);
+    let mut es = Box::new(ElectricSocket::new(String::from("Electric socket #3")));
+    es.on();
+    room1.add(es);
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #4")));
+    room1.add(es);
+
+    let t = Box::new(Thermometer::new(String::from("Thermometer #1")));
+    room1.add(t);
+
+    house.add(room1);
+
+    let mut room2 = SmartRoom::new(String::from("Room2"));
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #1")));
+    room2.add(es);
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #2")));
+    room2.add(es);
+    let es = Box::new(ElectricSocket::new(String::from("Electric socket #3")));
+    room2.add(es);
+    let mut es = Box::new(ElectricSocket::new(String::from("Electric socket #4")));
+    es.on();
+    room2.add(es);
+
+    let t = Box::new(Thermometer::new(String::from("Thermometer #1")));
+    room2.add(t);
+
+    house.add(room2);
+    house.info();
+
+    house.device_status("Room1", "Electric socket #4");
 }
