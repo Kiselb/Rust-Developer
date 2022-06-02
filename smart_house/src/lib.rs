@@ -59,7 +59,6 @@ impl SmartRoom {
     pub fn add(&mut self, device: Box<dyn SmartDevice>) {
         self.devices.insert(String::from(device.identity()), device);
     }
-    //#[allow(clippy::borrowed_box)]
     pub fn get(&self, device_name: &str) -> Option<&dyn SmartDevice> {
         self.devices.get(device_name).map(|v| v.as_ref())
     }
