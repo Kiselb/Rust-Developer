@@ -1,4 +1,7 @@
-use smart_house_lib::{ElectricSocket, SmartHouse, SmartRoom, Thermometer};
+use smart_house_lib::smart_house::SmartHouse;
+use smart_house_lib::smart_house::smart_room::SmartRoom;
+use smart_house_lib::smart_house::smart_room::electric_socket::ElectricSocket;
+use smart_house_lib::smart_house::smart_room::thermometer::Thermometer;
 
 fn main() {
     let mut house = SmartHouse::new(String::from("Smart House"));
