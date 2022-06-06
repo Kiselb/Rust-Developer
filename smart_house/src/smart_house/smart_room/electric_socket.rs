@@ -1,4 +1,5 @@
 use crate::smart_house::smart_room::SmartDevice;
+use std::fmt::Write;
 
 pub struct ElectricSocket {
     name: String,
@@ -10,14 +11,17 @@ impl SmartDevice for ElectricSocket {
         &self.name
     }
     fn info(&self) -> String {
-        let mut info = String::from("Electric socket: ");
-        info.push_str(&self.name);
+        let mut info = String::new();
+        write!(info, "Electric socket: {}", &self.name).unwrap();
         if self.status {
-            info.push_str(" State: ON");
-            info.push_str(" Consumption power: ");
-            info.push_str(&self.power_consumption.to_string());
+            write!(
+                info,
+                " State: ON Consumption power: {}",
+                &self.power_consumption
+            )
+            .unwrap();
         } else {
-            info.push_str(" State: OFF");
+            write!(info, " State: OFF").unwrap();
         }
         info
     }

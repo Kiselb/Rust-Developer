@@ -1,4 +1,5 @@
 use crate::smart_house::smart_room::SmartDevice;
+use std::fmt::Write;
 
 pub struct Thermometer {
     name: String,
@@ -9,10 +10,14 @@ impl SmartDevice for Thermometer {
         &self.name
     }
     fn info(&self) -> String {
-        let mut info = String::from("Thermometer: ");
-        info.push_str(&self.name);
-        info.push_str(" Value: ");
-        info.push_str(&self.temperature.to_string());
+        let mut info = String::new();
+        write!(
+            info,
+            "Thermometer: {} Value: {}",
+            &self.name,
+            &self.temperature.to_string()
+        )
+        .unwrap();
         info
     }
 }
@@ -25,5 +30,8 @@ impl Thermometer {
     }
     pub fn temperature(&self) -> i8 {
         self.temperature
+    }
+    pub fn set_temperature(&mut self, temperature: i8) {
+        self.temperature = temperature;
     }
 }

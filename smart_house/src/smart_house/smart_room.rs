@@ -1,9 +1,11 @@
-use std::collections::HashMap;
-pub mod smart_device;
+use std::fmt::Write;
+
 pub mod electric_socket;
+pub mod smart_device;
 pub mod thermometer;
 
 use crate::smart_house::smart_room::smart_device::SmartDevice;
+use std::collections::HashMap;
 
 pub struct SmartRoom {
     pub name: String,
@@ -16,11 +18,15 @@ impl SmartRoom {
             devices: HashMap::new(),
         }
     }
-    pub fn info(&self) {
-        println!("Room: {}", &self.name);
-        for val in &mut self.devices.values() {
-            println!("{}", val.info());
+    pub fn info(&self) -> String {
+        let mut devices: Vec<_> = self.devices.iter().collect();
+        devices.sort_by(|op1, op2| op1.0.cmp(op2.0));
+
+        let mut info = String::new();
+        for val in devices {
+            writeln!(info, "{}", &val.1.info()).unwrap();
         }
+        info
     }
     pub fn add(&mut self, device: Box<dyn SmartDevice>) {
         self.devices.insert(String::from(device.identity()), device);
