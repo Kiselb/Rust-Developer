@@ -1,5 +1,8 @@
-use crate::smart_house::smart_room::SmartDevice;
 use std::fmt::Write;
+
+use crate::smart_house::smart_room::smart_device::DEVICE_IDENTITY_MIN_LENGTH;
+use crate::smart_house::smart_room::SmartDevice;
+use crate::smart_house::SmartHouseErrors;
 
 pub struct ElectricSocket {
     name: String,
@@ -27,12 +30,15 @@ impl SmartDevice for ElectricSocket {
     }
 }
 impl ElectricSocket {
-    pub fn new(name: String) -> Self {
-        Self {
+    pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
+        if name.len() < DEVICE_IDENTITY_MIN_LENGTH {
+            return Err(SmartHouseErrors::InvalidDeviceIdentity);
+        }
+        Ok(Self {
             name,
             power_consumption: 0,
             status: false,
-        }
+        })
     }
     pub fn on(&mut self) {
         self.status = true;

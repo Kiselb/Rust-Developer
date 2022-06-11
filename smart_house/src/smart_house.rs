@@ -2,23 +2,36 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 pub mod clever_room;
+pub mod errors;
 pub mod smart_room;
 
+use crate::smart_house::errors::SmartHouseErrors;
 use crate::smart_house::smart_room::SmartRoom;
+use crate::smart_house::smart_room::SMART_ROOM_NAME_MIN_LENGTH;
+
+pub const SMART_HOUSE_NAME_MIN_LENGTH: usize = 8;
 
 pub struct SmartHouse {
     name: String,
     rooms: HashMap<String, SmartRoom>,
 }
 impl SmartHouse {
-    pub fn new(name: String) -> Self {
-        Self {
+    pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
+        if name.len() < SMART_HOUSE_NAME_MIN_LENGTH {
+            return Err(SmartHouseErrors::InvalidHouseName);
+        };
+        Ok(Self {
             name,
             rooms: HashMap::new(),
-        }
+        })
     }
-    pub fn add(&mut self, room: SmartRoom) {
-        self.rooms.insert(String::from(&room.name), room);
+    pub fn add(&mut self, room: SmartRoom) -> Result<(), SmartHouseErrors> {
+        let room_name = String::from(&room.name);
+        if room_name.len() < SMART_ROOM_NAME_MIN_LENGTH {
+            return Err(SmartHouseErrors::InvalidRoomName);
+        }
+        self.rooms.insert(room_name, room);
+        Ok(())
     }
     pub fn info(&self) -> String {
         let mut info = String::new();
@@ -31,7 +44,11 @@ impl SmartHouse {
         }
         info
     }
-    pub fn device_status(&self, room_name: &str, device_name: &str) -> String {
+    pub fn device_status(
+        &self,
+        room_name: &str,
+        device_name: &str,
+    ) -> Result<String, SmartHouseErrors> {
         let room = self.rooms.get(room_name);
         let mut info = String::new();
         match room {
@@ -42,16 +59,16 @@ impl SmartHouse {
                         writeln!(info, "Room {} Device status {}", room_name, device.info())
                             .unwrap()
                     }
-                    None => writeln!(
-                        info,
-                        "Device {} in Room {} does not exists",
-                        device_name, room_name
-                    )
-                    .unwrap(),
+                    None => {
+                        return Err(SmartHouseErrors::DeviceNotFound((
+                            room_name.to_string(),
+                            device_name.to_string(),
+                        )))
+                    }
                 }
             }
-            None => writeln!(info, "Room {} does not exists", room_name).unwrap(),
+            None => return Err(SmartHouseErrors::RoomNotFound(room_name.to_string())),
         }
-        info
+        Ok(info)
     }
 }

@@ -4,19 +4,25 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 use crate::smart_house::clever_room::clever_device::CleverDevice;
+use crate::smart_house::errors::SmartHouseErrors;
+use crate::smart_house::smart_room::smart_device::SmartDevice;
+use crate::smart_house::smart_room::smart_device::DEVICE_IDENTITY_MIN_LENGTH;
 
-use super::smart_room::smart_device::SmartDevice;
+pub const CLEVER_ROOM_NAME_MIN_LENGTH: usize = 8;
 
 pub struct CleverRoom {
     pub name: String,
     pub devices: HashMap<String, CleverDevice>,
 }
 impl CleverRoom {
-    pub fn new(name: String) -> Self {
-        Self {
+    pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
+        if name.len() < CLEVER_ROOM_NAME_MIN_LENGTH {
+            return Err(SmartHouseErrors::InvalidRoomName);
+        }
+        Ok(Self {
             name,
             devices: HashMap::new(),
-        }
+        })
     }
     pub fn info(&self) -> String {
         let mut devices: Vec<_> = self.devices.iter().collect();
@@ -35,23 +41,34 @@ impl CleverRoom {
         }
         info
     }
-    pub fn add(&mut self, device: CleverDevice) {
+    pub fn add(&mut self, device: CleverDevice) -> Result<(), SmartHouseErrors> {
         match device {
             CleverDevice::ElecticSocket(electric_socket) => {
+                if electric_socket.identity().len() < DEVICE_IDENTITY_MIN_LENGTH {
+                    return Err(SmartHouseErrors::InvalidDeviceIdentity);
+                }
                 self.devices.insert(
                     String::from(electric_socket.identity()),
                     CleverDevice::ElecticSocket(electric_socket),
                 );
+                Ok(())
             }
             CleverDevice::Thermometer(thermometer) => {
+                if thermometer.identity().len() < DEVICE_IDENTITY_MIN_LENGTH {
+                    return Err(SmartHouseErrors::InvalidDeviceIdentity);
+                }
                 self.devices.insert(
                     String::from(thermometer.identity()),
                     CleverDevice::Thermometer(thermometer),
                 );
+                Ok(())
             }
         }
     }
     pub fn get(&self, device_name: &str) -> Option<&CleverDevice> {
         self.devices.get(device_name)
+    }
+    pub fn get_mut(&mut self, device_name: &str) -> Option<&mut CleverDevice> {
+        self.devices.get_mut(device_name)
     }
 }
