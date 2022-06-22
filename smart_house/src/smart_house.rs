@@ -33,6 +33,27 @@ impl SmartHouse {
         self.rooms.insert(room_name, room);
         Ok(())
     }
+    pub fn rem(&mut self, room_name: &str) -> Option<SmartRoom> {
+        self.rooms.remove_entry(room_name).map(|(_, room)| room)
+    }
+    pub fn get(&self, room_name: &str) -> Option<&SmartRoom> {
+        self.rooms.get(room_name)
+    }
+    pub fn get_mut(&mut self, room_name: &str) -> Option<&mut SmartRoom> {
+        self.rooms.get_mut(room_name)
+    }
+    pub fn list(&self) -> Vec<String> {
+        self.rooms.keys().cloned().collect::<Vec<String>>()
+    }
+    pub fn info_rooms(&self) -> String {
+        let mut info = String::new();
+        let mut rooms: Vec<_> = self.rooms.iter().collect();
+        rooms.sort_by(|op1, op2| op1.0.cmp(op2.0));
+        for val in rooms {
+            writeln!(info, "Room: {}", val.0).unwrap();
+        }
+        info
+    }
     pub fn info(&self) -> String {
         let mut info = String::new();
         writeln!(info, "House {}", &self.name).unwrap();

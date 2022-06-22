@@ -42,7 +42,13 @@ impl SmartRoom {
         self.devices.insert(device_name, device);
         Ok(())
     }
+    pub fn rem(&mut self, device_name: &str) -> Option<Box<dyn SmartDevice>> {
+        self.devices.remove_entry(device_name).map(|(_, room)| room)
+    }
     pub fn get(&self, device_name: &str) -> Option<&dyn SmartDevice> {
         self.devices.get(device_name).map(|v| v.as_ref())
+    }
+    pub fn list(&self) -> Vec<String> {
+        self.devices.keys().cloned().collect::<Vec<String>>()
     }
 }

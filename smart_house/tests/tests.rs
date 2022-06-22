@@ -24,7 +24,7 @@ fn test_electric_socket_off_report() {
 fn test_electric_socket_on_report() {
     let mut device = Box::new(
         match ElectricSocket::new(String::from("Electric socket #1")) {
-            Ok(mut device) => device,
+            Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
     );
@@ -47,7 +47,7 @@ fn test_thermometer_initial_report() {
 #[test]
 fn test_thermometer_onaction_report() {
     let mut device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(mut device) => device,
+        Ok(device) => device,
         Err(e) => panic!("{:?}", e),
     });
     device.set_temperature(25);
@@ -76,13 +76,17 @@ fn test_smart_room_onaction_report() {
             Err(e) => panic!("{:?}", e),
         },
     );
-    room.add(device);
+    if let Err(e) = room.add(device) {
+        panic!("{:?}", e)
+    };
 
     let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
         Ok(device) => device,
         Err(e) => panic!("{:?}", e),
     });
-    room.add(device);
+    if let Err(e) = room.add(device) {
+        panic!("{:?}", e)
+    };
 
     let room_info = room.info();
     assert_eq!(
@@ -117,20 +121,26 @@ fn test_smart_house_onaction_report() {
             Err(e) => panic!("{:?}", e),
         },
     );
-    room1.add(device);
+    if let Err(e) = room1.add(device) {
+        panic!("{:?}", e)
+    };
 
     let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
         Ok(device) => device,
         Err(e) => panic!("{:?}", e),
     });
-    room1.add(device);
+    if let Err(e) = room1.add(device) {
+        panic!("{:?}", e)
+    };
 
     let mut room2 = match SmartRoom::new(String::from("Smart Room #2")) {
         Ok(room) => room,
         Err(e) => panic!("{:?}", e),
     };
 
-    house.add(room1);
+    if let Err(e) = house.add(room1) {
+        panic!("{:?}", e)
+    }
 
     let device = Box::new(
         match ElectricSocket::new(String::from("Electric socket #1")) {
@@ -138,16 +148,51 @@ fn test_smart_house_onaction_report() {
             Err(e) => panic!("{:?}", e),
         },
     );
-    room2.add(device);
+    if let Err(e) = room2.add(device) {
+        panic!("{:?}", e)
+    };
 
     let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
         Ok(device) => device,
         Err(e) => panic!("{:?}", e),
     });
-    room2.add(device);
+    if let Err(e) = room2.add(device) {
+        panic!("{:?}", e)
+    };
 
-    house.add(room2);
+    if let Err(e) = house.add(room2) {
+        panic!("{:?}", e)
+    }
 
     let info = house.info();
     assert_eq!("House Smart House\nRoom: Smart Room #1\nElectric socket: Electric socket #1 State: OFF\nThermometer: Thermometer #1 Value: 0\nRoom: Smart Room #2\nElectric socket: Electric socket #1 State: OFF\nThermometer: Thermometer #1 Value: 0\n", info);
+
+    let info = house.info_rooms();
+    assert_eq!("Room: Smart Room #1\nRoom: Smart Room #2\n", info);
+
+    match house.get_mut("Smart Room #1") {
+        Some(room) => {
+            assert_eq!(room.name, "Smart Room #1");
+            match room.rem("Electric socket #1") {
+                Some(device) => {
+                    assert_eq!(device.identity(), "Electric socket #1")
+                }
+                None => panic!("Device not found"),
+            }
+        }
+        None => panic!("Room not found"),
+    }
+
+    let info = house.info();
+    assert_eq!("House Smart House\nRoom: Smart Room #1\nThermometer: Thermometer #1 Value: 0\nRoom: Smart Room #2\nElectric socket: Electric socket #1 State: OFF\nThermometer: Thermometer #1 Value: 0\n", info);
+
+    let room = house.rem("Smart Room #1");
+    match room {
+        Some(room) => {
+            assert_eq!(room.name, "Smart Room #1");
+            let info = house.info_rooms();
+            assert_eq!("Room: Smart Room #2\n", info);
+        }
+        None => panic!("Room not found"),
+    }
 }
