@@ -9,6 +9,7 @@ pub struct ElectricSocket {
     power_consumption: u32,
     status: bool,
 }
+
 impl SmartDevice for ElectricSocket {
     fn identity(&self) -> &String {
         &self.name
@@ -29,6 +30,7 @@ impl SmartDevice for ElectricSocket {
         info
     }
 }
+
 impl ElectricSocket {
     pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
         if name.len() < DEVICE_IDENTITY_MIN_LENGTH {

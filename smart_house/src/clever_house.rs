@@ -23,6 +23,7 @@ impl CleverHouse {
             rooms: HashMap::new(),
         })
     }
+
     pub fn add(&mut self, room: CleverRoom) -> Result<(), SmartHouseErrors> {
         let room_name = String::from(&room.name);
         if room_name.len() < CLEVER_ROOM_NAME_MIN_LENGTH {
@@ -31,18 +32,23 @@ impl CleverHouse {
         self.rooms.insert(String::from(&room.name), room);
         Ok(())
     }
+
     pub fn rem(&mut self, room_name: &str) -> Option<CleverRoom> {
         self.rooms.remove_entry(room_name).map(|(_, room)| room)
     }
+
     pub fn get(&self, room_name: &str) -> Option<&CleverRoom> {
         self.rooms.get(room_name)
     }
+
     pub fn get_mut(&mut self, room_name: &str) -> Option<&mut CleverRoom> {
         self.rooms.get_mut(room_name)
     }
+
     pub fn list(&self) -> Vec<String> {
         self.rooms.keys().cloned().collect::<Vec<String>>()
     }
+
     pub fn info_rooms(&self) -> String {
         let mut info = String::new();
         let mut rooms: Vec<_> = self.rooms.iter().collect();
@@ -52,6 +58,7 @@ impl CleverHouse {
         }
         info
     }
+
     pub fn info(&self) -> String {
         let mut info = String::new();
         writeln!(info, "House '{}'", &self.name).unwrap();
@@ -62,6 +69,7 @@ impl CleverHouse {
         }
         info
     }
+    
     pub fn device_status(
         &self,
         room_name: &str,

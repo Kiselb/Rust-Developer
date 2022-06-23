@@ -24,6 +24,7 @@ impl SmartRoom {
             devices: HashMap::new(),
         })
     }
+
     pub fn info(&self) -> String {
         let mut devices: Vec<_> = self.devices.iter().collect();
         devices.sort_by(|op1, op2| op1.0.cmp(op2.0));
@@ -34,6 +35,7 @@ impl SmartRoom {
         }
         info
     }
+
     pub fn add(&mut self, device: Box<dyn SmartDevice>) -> Result<(), SmartHouseErrors> {
         let device_name = String::from(device.identity());
         if device_name.len() < DEVICE_IDENTITY_MIN_LENGTH {
@@ -42,12 +44,15 @@ impl SmartRoom {
         self.devices.insert(device_name, device);
         Ok(())
     }
+
     pub fn rem(&mut self, device_name: &str) -> Option<Box<dyn SmartDevice>> {
         self.devices.remove_entry(device_name).map(|(_, room)| room)
     }
+
     pub fn get(&self, device_name: &str) -> Option<&dyn SmartDevice> {
         self.devices.get(device_name).map(|v| v.as_ref())
     }
+    
     pub fn list(&self) -> Vec<String> {
         self.devices.keys().cloned().collect::<Vec<String>>()
     }

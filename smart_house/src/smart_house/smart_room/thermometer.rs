@@ -8,6 +8,7 @@ pub struct Thermometer {
     name: String,
     temperature: i8,
 }
+
 impl SmartDevice for Thermometer {
     fn identity(&self) -> &String {
         &self.name
@@ -24,6 +25,7 @@ impl SmartDevice for Thermometer {
         info
     }
 }
+
 impl Thermometer {
     pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
         if name.len() < DEVICE_IDENTITY_MIN_LENGTH {

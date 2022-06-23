@@ -242,7 +242,6 @@ fn with_clever_room() {
         Ok(()) => (),
         Err(e) => panic!("{:?}", e),
     };
-
     match house.add(room1) {
         Ok(()) => (),
         Err(e) => panic!("{:?}", e),
