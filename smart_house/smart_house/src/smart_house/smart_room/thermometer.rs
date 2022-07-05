@@ -4,6 +4,8 @@ use crate::smart_house::smart_room::smart_device::DEVICE_IDENTITY_MIN_LENGTH;
 use crate::smart_house::smart_room::SmartDevice;
 use crate::smart_house::SmartHouseErrors;
 
+use sdcp::NetConfig;
+
 pub struct Thermometer {
     name: String,
     temperature: i8,
@@ -24,10 +26,16 @@ impl SmartDevice for Thermometer {
         .unwrap();
         info
     }
+    fn getp(&self) -> sdcp::results::NetResult {
+        Ok(vec![])
+    }
+    fn setp(&self) -> sdcp::results::NetResult {
+        Ok(vec![])
+    }
 }
 
 impl Thermometer {
-    pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
+    pub fn new(name: String, _net_config: NetConfig) -> Result<Self, SmartHouseErrors> {
         if name.len() < DEVICE_IDENTITY_MIN_LENGTH {
             return Err(SmartHouseErrors::InvalidDeviceIdentity);
         }

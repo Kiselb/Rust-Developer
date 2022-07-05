@@ -69,7 +69,7 @@ impl CleverHouse {
         }
         info
     }
-    
+
     pub fn device_status(
         &self,
         room_name: &str,

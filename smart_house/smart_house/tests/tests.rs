@@ -1,3 +1,6 @@
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+use sdcp::NetConfig;
 use smart_house_lib::smart_house::{
     smart_room::{
         electric_socket::ElectricSocket, smart_device::SmartDevice, thermometer::Thermometer,
@@ -8,8 +11,13 @@ use smart_house_lib::smart_house::{
 
 #[test]
 fn test_electric_socket_off_report() {
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
     let device = Box::new(
-        match ElectricSocket::new(String::from("Electric socket #1")) {
+        match ElectricSocket::new(String::from("Electric socket #1"), net_config) {
             Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
@@ -22,8 +30,13 @@ fn test_electric_socket_off_report() {
 }
 #[test]
 fn test_electric_socket_on_report() {
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
     let mut device = Box::new(
-        match ElectricSocket::new(String::from("Electric socket #1")) {
+        match ElectricSocket::new(String::from("Electric socket #1"), net_config) {
             Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
@@ -37,19 +50,33 @@ fn test_electric_socket_on_report() {
 }
 #[test]
 fn test_thermometer_initial_report() {
-    let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(device) => device,
-        Err(e) => panic!("{:?}", e),
-    });
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
+    let device = Box::new(
+        match Thermometer::new(String::from("Thermometer #1"), net_config) {
+            Ok(device) => device,
+            Err(e) => panic!("{:?}", e),
+        },
+    );
     let device_info = device.info();
     assert_eq!("Thermometer: Thermometer #1 Value: 0", device_info);
 }
 #[test]
 fn test_thermometer_onaction_report() {
-    let mut device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(device) => device,
-        Err(e) => panic!("{:?}", e),
-    });
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
+    let mut device = Box::new(
+        match Thermometer::new(String::from("Thermometer #1"), net_config) {
+            Ok(device) => device,
+            Err(e) => panic!("{:?}", e),
+        },
+    );
     device.set_temperature(25);
     let device_info = device.info();
     assert_eq!("Thermometer: Thermometer #1 Value: 25", device_info);
@@ -70,8 +97,13 @@ fn test_smart_room_onaction_report() {
         Err(e) => panic!("{:?}", e),
     };
 
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
     let device = Box::new(
-        match ElectricSocket::new(String::from("Electric socket #1")) {
+        match ElectricSocket::new(String::from("Electric socket #1"), net_config) {
             Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
@@ -80,10 +112,17 @@ fn test_smart_room_onaction_report() {
         panic!("{:?}", e)
     };
 
-    let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(device) => device,
-        Err(e) => panic!("{:?}", e),
-    });
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
+    let device = Box::new(
+        match Thermometer::new(String::from("Thermometer #1"), net_config) {
+            Ok(device) => device,
+            Err(e) => panic!("{:?}", e),
+        },
+    );
     if let Err(e) = room.add(device) {
         panic!("{:?}", e)
     };
@@ -115,8 +154,13 @@ fn test_smart_house_onaction_report() {
         Err(e) => panic!("{:?}", e),
     };
 
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
     let device = Box::new(
-        match ElectricSocket::new(String::from("Electric socket #1")) {
+        match ElectricSocket::new(String::from("Electric socket #1"), net_config) {
             Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
@@ -125,10 +169,17 @@ fn test_smart_house_onaction_report() {
         panic!("{:?}", e)
     };
 
-    let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(device) => device,
-        Err(e) => panic!("{:?}", e),
-    });
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
+    let device = Box::new(
+        match Thermometer::new(String::from("Thermometer #1"), net_config) {
+            Ok(device) => device,
+            Err(e) => panic!("{:?}", e),
+        },
+    );
     if let Err(e) = room1.add(device) {
         panic!("{:?}", e)
     };
@@ -142,8 +193,13 @@ fn test_smart_house_onaction_report() {
         panic!("{:?}", e)
     }
 
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
     let device = Box::new(
-        match ElectricSocket::new(String::from("Electric socket #1")) {
+        match ElectricSocket::new(String::from("Electric socket #1"), net_config) {
             Ok(device) => device,
             Err(e) => panic!("{:?}", e),
         },
@@ -152,10 +208,17 @@ fn test_smart_house_onaction_report() {
         panic!("{:?}", e)
     };
 
-    let device = Box::new(match Thermometer::new(String::from("Thermometer #1")) {
-        Ok(device) => device,
-        Err(e) => panic!("{:?}", e),
-    });
+    let net_config = NetConfig::new(SocketAddr::new(
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+        55000,
+    ));
+
+    let device = Box::new(
+        match Thermometer::new(String::from("Thermometer #1"), net_config) {
+            Ok(device) => device,
+            Err(e) => panic!("{:?}", e),
+        },
+    );
     if let Err(e) = room2.add(device) {
         panic!("{:?}", e)
     };

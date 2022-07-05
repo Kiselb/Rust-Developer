@@ -78,7 +78,7 @@ impl CleverRoom {
     pub fn rem(&mut self, device_name: &str) -> Option<CleverDevice> {
         self.devices.remove_entry(device_name).map(|(_, room)| room)
     }
-    
+
     pub fn list(&self) -> Vec<String> {
         self.devices.keys().cloned().collect::<Vec<String>>()
     }

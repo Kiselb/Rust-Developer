@@ -4,6 +4,8 @@ use crate::smart_house::smart_room::smart_device::DEVICE_IDENTITY_MIN_LENGTH;
 use crate::smart_house::smart_room::SmartDevice;
 use crate::smart_house::SmartHouseErrors;
 
+use sdcp::NetConfig;
+
 pub struct ElectricSocket {
     name: String,
     power_consumption: u32,
@@ -29,10 +31,16 @@ impl SmartDevice for ElectricSocket {
         }
         info
     }
+    fn getp(&self) -> sdcp::results::NetResult {
+        Ok(vec![])
+    }
+    fn setp(&self) -> sdcp::results::NetResult {
+        Ok(vec![])
+    }
 }
 
 impl ElectricSocket {
-    pub fn new(name: String) -> Result<Self, SmartHouseErrors> {
+    pub fn new(name: String, _net_config: NetConfig) -> Result<Self, SmartHouseErrors> {
         if name.len() < DEVICE_IDENTITY_MIN_LENGTH {
             return Err(SmartHouseErrors::InvalidDeviceIdentity);
         }
