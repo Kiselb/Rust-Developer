@@ -39,8 +39,17 @@ fn main() {
             println!("Request completed successfully");
             println!("Protocol: {};", frame.protocol);
             println!("Command: {};", frame.command);
-            for item in frame.parameters.iter() {
-                println!("Parameter: {}={};", item.name, item.value);
+            println!("Result: {};", frame.result);
+            match frame.result.as_str() {
+                "OK" => {
+                    for item in frame.parameters.iter() {
+                        println!("Parameter: {}={};", item.name, item.value);
+                    }
+                },
+                "FAILED" => {
+                    println!("Command execution failed")
+                },
+                _ => println!("Invalid command response")
             }
         }
         Err(error) => {

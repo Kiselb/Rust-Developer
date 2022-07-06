@@ -22,6 +22,7 @@ fn handler(frame: FrameResult) -> SdcpFrame {
         Ok(frame) => {
             println!("Protocol: {}", frame.protocol);
             println!("Commnad: {}", frame.command);
+            println!("Result: {}", frame.result);
             for item in frame.parameters.iter() {
                 println!("Parameter: {}={}", item.name, item.value);
             }

@@ -130,18 +130,18 @@ pub fn make_frame(data: String) -> FrameResult {
             if pair.len() != 2 {
                 return Err(FrameError::InvalidPacket);
             } else if "Command".to_uppercase().eq(&pair[0].to_uppercase()) && !pair[1].is_empty() {
-                frame.command = pair[1].to_string();
-            } else if !"Result".to_uppercase().eq(&pair[0].to_uppercase()) {
+                frame.command = pair[1].to_string().to_uppercase();
+            } else if "Result".to_uppercase().eq(&pair[0].to_uppercase()) {
+                frame.result = pair[1].to_string().to_uppercase();
+            } else {
                 frame
                     .parameters
-                    .push(ParamItem::new(pair[0].to_string(), pair[1].to_string()));
+                    .push(ParamItem::new(pair[0].to_string().to_uppercase(), pair[1].to_string().to_uppercase()));
+
             }
         }
     }
     if !frame.parameters.is_empty() {
-        frame
-            .parameters
-            .push(ParamItem::new("Result".to_string(), "OK".to_string()));
         Ok(frame)
     } else {
         Err(FrameError::InvalidPacket)
@@ -152,6 +152,7 @@ pub fn make_packet(frame: SdcpFrame) -> String {
     let mut data: String = String::new();
 
     write!(data, "Command={};", frame.command).unwrap();
+    write!(data, "Result={};", frame.result).unwrap();
     for parameter in frame.parameters.iter() {
         write!(data, "{}={};", parameter.name, parameter.value).unwrap();
     }
