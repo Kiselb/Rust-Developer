@@ -1,5 +1,11 @@
 use core::panic;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::io::{self, Write};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
 
 use sdcp::{NetConfig, ParamItem, SdcpFrame};
 use smart_house_lib::clever_house::CleverHouse;
@@ -10,9 +16,36 @@ use smart_house_lib::smart_house::smart_room::thermometer::Thermometer;
 use smart_house_lib::smart_house::smart_room::SmartRoom;
 use smart_house_lib::smart_house::SmartHouse;
 
-use sdcp::{SdcpHandler, SDCP_COMMANDS, SDCP_OK, SDCP_PACKET_HEADER, SDCP_PARAM_STATUS};
+use sdcp::{
+    SdcpHandler, SDCP_COMMANDS, SDCP_FAILED, SDCP_OK, SDCP_PACKET_HEADER, SDCP_PARAM_STATUS,
+};
+use sdcpu::{ParamItem as SdcpuParamItem, SdcpuFrame, SdcpuHandler, SDCPU_PACKET_HEADER};
+use th_simulator::TH_PARAM_TEMPERATURE;
 
 fn main() {
+    let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 4100);
+    let arc_frame = Arc::new(Mutex::new(Box::new(SdcpuFrame {
+        protocol: SDCPU_PACKET_HEADER.to_string(),
+        parameters: vec![],
+    })));
+
+    SdcpuHandler::new(address, Arc::clone(&arc_frame)).unwrap();
+    for _ in 0..200 {
+        thread::sleep(Duration::from_secs(1));
+
+        let arc_frame = &**arc_frame.lock().unwrap();
+        let error_value = SdcpuParamItem::new(TH_PARAM_TEMPERATURE.to_string(), "?".to_string());
+        let temperature = arc_frame
+            .parameters
+            .iter()
+            .find(|&item| item.name.eq("TEMPERATURE"))
+            .unwrap_or(&error_value);
+        print!("Текущая температура: {}\r", temperature.value);
+        io::stdout().flush().unwrap();
+    }
+}
+
+fn _tcp_smart_devices() {
     // with_smart_room();
     // with_clever_room();
 
@@ -41,15 +74,15 @@ fn main() {
             println!("Command: {};", frame.command);
             println!("Result: {};", frame.result);
             match frame.result.as_str() {
-                "OK" => {
+                SDCP_OK => {
                     for item in frame.parameters.iter() {
                         println!("Parameter: {}={};", item.name, item.value);
                     }
-                },
-                "FAILED" => {
+                }
+                SDCP_FAILED => {
                     println!("Command execution failed")
-                },
-                _ => println!("Invalid command response")
+                }
+                _ => println!("Invalid command response"),
             }
         }
         Err(error) => {

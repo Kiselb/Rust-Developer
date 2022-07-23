@@ -134,10 +134,10 @@ pub fn make_frame(data: String) -> FrameResult {
             } else if "Result".to_uppercase().eq(&pair[0].to_uppercase()) {
                 frame.result = pair[1].to_string().to_uppercase();
             } else {
-                frame
-                    .parameters
-                    .push(ParamItem::new(pair[0].to_string().to_uppercase(), pair[1].to_string().to_uppercase()));
-
+                frame.parameters.push(ParamItem::new(
+                    pair[0].to_string().to_uppercase(),
+                    pair[1].to_string().to_uppercase(),
+                ));
             }
         }
     }

@@ -1,0 +1,1 @@
+pub const TH_PARAM_TEMPERATURE: &str = "TEMPERATURE";
