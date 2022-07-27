@@ -1,8 +1,8 @@
 use std::fmt::Write;
-use std::io::{Read as IORead, Write as IOWrite};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::net::SocketAddr;
 use std::str;
-use std::thread;
+use tokio::io::AsyncWriteExt;
+use tokio::net::{TcpListener, TcpStream};
 
 use crate::results::{
     FrameError, FrameResult, RecvError, RecvResult, RequestError, RequestResult, SendResult,
@@ -73,36 +73,43 @@ impl SdcpHandler {
     pub fn new(address: SocketAddr) -> Self {
         Self { address }
     }
-    pub fn bind(&self, handler: SdcpRequestHandler) {
+    pub async fn bind(&self, handler: SdcpRequestHandler) {
         let address = self.address;
-        thread::spawn(move || {
-            let listener = TcpListener::bind(address).unwrap();
-            for stream in listener.incoming() {
-                match stream {
-                    Ok(stream) => match recv_packet(&stream) {
-                        Ok(packet) => match stream.peer_addr() {
-                            Ok(address) => {
-                                println!("Source address: {}", address);
-                                match send_packet(make_packet(handler(make_frame(packet))), &stream)
+        tokio::spawn(async move {
+            let listener = match TcpListener::bind(address).await {
+                Ok(listener) => listener,
+                Err(error) => panic!("Binding error: {}", error),
+            };
+            loop {
+                println!("In loop");
+                match listener.accept().await {
+                    Ok((mut stream, address)) => {
+                        println!("Source address: {}", address);
+                        match recv_packet(&stream).await {
+                            Ok(packet) => {
+                                match send_packet(
+                                    make_packet(handler(make_frame(packet))),
+                                    &mut stream,
+                                )
+                                .await
                                 {
                                     Ok(()) => (),
                                     Err(error) => println!("Packet sending error: {}", error),
                                 }
                             }
-                            Err(error) => println!("Error getting address: {}", error),
-                        },
-                        Err(error) => println!("Error receiving package: {}", error),
-                    },
-                    Err(error) => println!("Connection error: {}", error),
+                            Err(error) => println!("Error receiving package: {}", error),
+                        }
+                    }
+                    Err(error) => println!("Error receiving package: {}", error),
                 }
             }
         });
     }
 
-    pub fn request(&self, frame: SdcpFrame, address: SocketAddr) -> RequestResult {
-        match TcpStream::connect(address) {
-            Ok(stream) => match send_packet(make_packet(frame), &stream) {
-                Ok(_) => match recv_packet(&stream) {
+    pub async fn request(&self, frame: SdcpFrame, address: SocketAddr) -> RequestResult {
+        match TcpStream::connect(address).await {
+            Ok(mut stream) => match send_packet(make_packet(frame), &mut stream).await {
+                Ok(_) => match recv_packet(&stream).await {
                     Ok(packet) => match make_frame(packet) {
                         Ok(frame) => Ok(frame),
                         Err(_) => Err(RequestError::InvalidPacket),
@@ -160,36 +167,52 @@ pub fn make_packet(frame: SdcpFrame) -> String {
     data
 }
 
-pub fn send_packet<D: AsRef<str>, W: IOWrite>(data: D, mut writer: W) -> SendResult {
+pub async fn send_packet<D: AsRef<str>>(data: D, stream: &mut TcpStream) -> SendResult {
     let header_bytes = SDCP_PACKET_HEADER.as_bytes();
 
     let data_bytes = data.as_ref().as_bytes();
     let data_bytes_length = (data_bytes.len() as u32).to_be_bytes();
 
-    writer.write_all(header_bytes)?;
-    writer.write_all(&data_bytes_length)?;
-    writer.write_all(data_bytes)?;
+    stream.write_all(header_bytes).await?;
+    stream.write_all(&data_bytes_length).await?;
+    stream.write_all(data_bytes).await?;
     Ok(())
 }
 
-fn recv_packet<R: IORead>(mut reader: R) -> RecvResult {
-    let mut packet_header = [0; SDCP_PACKET_HEADER.len()];
-    reader.read_exact(&mut packet_header)?;
+async fn recv_packet(stream: &TcpStream) -> RecvResult {
+    let mut packet = [0; 4096];
+    stream.readable().await?;
 
-    let protocol = str::from_utf8(&packet_header).map_err(|_| RecvError::BadEncoding);
-    match protocol {
-        Ok(protocol) => {
-            if !protocol.eq(SDCP_PACKET_HEADER) {
+    match stream.try_read(&mut packet) {
+        Ok(0) => Err(RecvError::InvalidPacket),
+        Ok(n) => {
+            if n < SDCP_PACKET_HEADER.len() + 4 {
                 return Err(RecvError::InvalidPacket);
             }
+            let protocol = str::from_utf8(&packet[0..SDCP_PACKET_HEADER.len()])
+                .map_err(|_| RecvError::BadEncoding);
+            match protocol {
+                Ok(protocol) => {
+                    if !protocol.eq(SDCP_PACKET_HEADER) {
+                        return Err(RecvError::InvalidPacket);
+                    }
+                }
+                Err(error) => return Err(error),
+            }
+            let data_length = u32::from_be_bytes([
+                packet[SDCP_PACKET_HEADER.len()],
+                packet[SDCP_PACKET_HEADER.len() + 1],
+                packet[SDCP_PACKET_HEADER.len() + 2],
+                packet[SDCP_PACKET_HEADER.len() + 3],
+            ]);
+            if n < SDCP_PACKET_HEADER.len() + 4 + (data_length as usize) {
+                return Err(RecvError::InvalidPacket);
+            }
+            let data = packet[SDCP_PACKET_HEADER.len() + 4
+                ..SDCP_PACKET_HEADER.len() + 4 + (data_length as usize)]
+                .to_vec();
+            String::from_utf8(data).map_err(|_| RecvError::BadEncoding)
         }
-        Err(error) => return Err(error),
+        Err(_) => Err(RecvError::InvalidPacket),
     }
-
-    let mut data_length = [0; 4];
-    reader.read_exact(&mut data_length)?;
-
-    let mut data = vec![0; u32::from_be_bytes(data_length) as _];
-    reader.read_exact(&mut data)?;
-    String::from_utf8(data).map_err(|_| RecvError::BadEncoding)
 }

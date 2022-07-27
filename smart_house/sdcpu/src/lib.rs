@@ -1,11 +1,10 @@
 use std::fmt::Write;
 use std::str;
 use std::{
-    error::Error,
-    net::{SocketAddr, UdpSocket},
+    net::SocketAddr,
     sync::{Arc, Mutex},
-    thread,
 };
+use tokio::net::UdpSocket;
 
 use crate::results::FrameError;
 
@@ -34,18 +33,18 @@ pub type SdcpuFrameShared = Arc<Mutex<Box<SdcpuFrame>>>;
 pub struct SdcpuHandler;
 
 impl SdcpuHandler {
-    pub fn new(
-        address: SocketAddr,
-        shared_frame: SdcpuFrameShared,
-    ) -> Result<Self, Box<dyn Error>> {
-        thread::spawn(move || {
-            let socket = UdpSocket::bind(address).unwrap();
+    pub async fn new(address: SocketAddr, shared_frame: SdcpuFrameShared) -> Self {
+        tokio::spawn(async move {
+            let socket = match UdpSocket::bind(address).await {
+                Ok(socket) => socket,
+                Err(error) => panic!("Address binding error: {error}"),
+            };
             loop {
                 let mut datagram = [0; 1024];
-                match socket.recv_from(&mut datagram) {
+                match socket.recv_from(&mut datagram).await {
                     Ok(response) => {
-                        **shared_frame.lock().unwrap() =
-                            make_frame(&datagram, response.0).unwrap_or(SdcpuFrame {
+                        **shared_frame.lock().unwrap() = make_frame(&datagram, response.0)
+                            .unwrap_or(SdcpuFrame {
                                 protocol: SDCPU_PACKET_HEADER.to_string(),
                                 parameters: vec![],
                             });
@@ -54,7 +53,7 @@ impl SdcpuHandler {
                 }
             }
         });
-        Ok(Self)
+        Self
     }
 }
 

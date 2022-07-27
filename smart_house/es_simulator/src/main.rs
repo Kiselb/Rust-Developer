@@ -124,12 +124,13 @@ fn handler(frame: FrameResult) -> SdcpFrame {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("Smart electric socket simulator");
 
     let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 55100);
     let sdcp = SdcpHandler::new(address);
-    sdcp.bind(handler);
+    sdcp.bind(handler).await;
 
     loop {
         let exit = String::from("exit");

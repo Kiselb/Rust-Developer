@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 sdcp = { path = "../sdcp" }
+tokio = { version = "1.20.0", features = ["full"] }
+

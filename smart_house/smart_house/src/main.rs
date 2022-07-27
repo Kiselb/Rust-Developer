@@ -22,14 +22,28 @@ use sdcp::{
 use sdcpu::{ParamItem as SdcpuParamItem, SdcpuFrame, SdcpuHandler, SDCPU_PACKET_HEADER};
 use th_simulator::TH_PARAM_TEMPERATURE;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    let tcp_mode = String::from("T");
+    let mut buffer: String = String::new();
+
+    println!("Выберите режим: T - TCP устройства, U - UDP устройства");
+    std::io::stdin().read_line(&mut buffer).unwrap();
+    if buffer.trim().to_uppercase().eq(&tcp_mode) {
+        tcp_smart_devices().await;
+    } else {
+        udp_smart_devices().await;
+    }
+}
+
+async fn udp_smart_devices() {
     let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 4100);
     let arc_frame = Arc::new(Mutex::new(Box::new(SdcpuFrame {
         protocol: SDCPU_PACKET_HEADER.to_string(),
         parameters: vec![],
     })));
 
-    SdcpuHandler::new(address, Arc::clone(&arc_frame)).unwrap();
+    SdcpuHandler::new(address, Arc::clone(&arc_frame)).await;
     for _ in 0..200 {
         thread::sleep(Duration::from_secs(1));
 
@@ -45,10 +59,7 @@ fn main() {
     }
 }
 
-fn _tcp_smart_devices() {
-    // with_smart_room();
-    // with_clever_room();
-
+async fn tcp_smart_devices() {
     println!("Server started");
     let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 55000);
 
@@ -67,7 +78,7 @@ fn _tcp_smart_devices() {
         parameters,
         result: SDCP_OK.to_string(),
     };
-    match handler.request(frame, es_address) {
+    match handler.request(frame, es_address).await {
         Ok(frame) => {
             println!("Request completed successfully");
             println!("Protocol: {};", frame.protocol);
@@ -119,7 +130,7 @@ fn _tcp_smart_devices() {
                 println!("Invalid command");
                 continue;
             }
-            match handler.request(frame, es_address) {
+            match handler.request(frame, es_address).await {
                 Ok(frame) => {
                     println!("Request completed successfully");
                     println!("Protocol: {};", frame.protocol);
@@ -136,6 +147,11 @@ fn _tcp_smart_devices() {
     }
 }
 
+//
+// Call in the previous version of main
+// with_smart_room();
+// with_clever_room();
+//
 fn _with_smart_room() {
     let mut house = match SmartHouse::new(String::from("Smart House #1")) {
         Ok(house) => house,
